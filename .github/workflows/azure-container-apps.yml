@@ -14,6 +14,7 @@ env:
   RESOURCE_GROUP: stack-api-rg
   LOCATION: uaenorth
   ENVIRONMENT_NAME: stack-api-env
+  ACR_NAME: stackapiregistry1032
   WEB_IMAGE_NAME: stack-web
   API_IMAGE_NAME: stack-api
   STACK_IMAGE_NAME: stack-backend
@@ -38,10 +39,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Azure Docker Login to ACR
-        uses: azure/docker-login@v2
+      - name: ACR CLI Login
+        uses: azure/cli@v2
         with:
-          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          inlineScript: |
+            az acr login --name ${{ env.ACR_NAME }}
 
       - name: Build and Push Web Image
         uses: docker/build-push-action@v6
