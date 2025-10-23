@@ -113,17 +113,12 @@ jobs:
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --image ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.WEB_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-      - name: Get Web App URL
-        id: geturl
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            WEB_URL=$(az containerapp show \
-              --name ${{ env.WEB_CONTAINER_APP_NAME }} \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --query properties.configuration.ingress.fqdn \
-              --output tsv)
-            echo "WEB_URL=https://${WEB_URL}" >> $GITHUB_OUTPUT
-
-      - name: Print URL
-        run: echo "Application URL: ${{ steps.geturl.outputs.WEB_URL }}"
+      - name: Get and Print Web App URL
+        shell: bash
+        run: |
+          WEB_URL=$(az containerapp show \
+            --name "${{ env.WEB_CONTAINER_APP_NAME }}" \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --query properties.configuration.ingress.fqdn \
+            --output tsv)
+          echo "Application URL: https://${WEB_URL}"
