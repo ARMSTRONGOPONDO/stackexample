@@ -3,7 +3,8 @@ const inputPrefix = 'stackapi_input_';
 const feedbackPrefix = 'stackapi_fb_';
 const validationPrefix = 'stackapi_val_';
 // const xmlfiles = ['questions/calc.xml', 'questions/stack_jxg.binding-demo-4.4.xml'];
-const apiUrl = 'http://localhost:3080';
+const apiBase = (window.runtimeConfig && window.runtimeConfig.API_BASE_URL) ? window.runtimeConfig.API_BASE_URL : window.location.origin;
+const apiUrl = (window.runtimeConfig && window.runtimeConfig.STACK_BACKEND_URL) ? window.runtimeConfig.STACK_BACKEND_URL : window.location.origin;
 
 const stackstring = {
   "teacheranswershow_mcq":"A correct answer is: {$a->display}",
@@ -363,7 +364,7 @@ async function callAIFeedback(qprefix, userAnswers, gradingResponse, questionNam
     console.log('Question text extracted:', questionText);
 
     // Call AI service (use custom API service on port 3000)
-    const response = await fetch('http://localhost:3000/ai/feedback', {
+    const response = await fetch(`${apiBase}/ai/feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

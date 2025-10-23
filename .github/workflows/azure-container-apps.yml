@@ -110,14 +110,29 @@ jobs:
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --image ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.STACK_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
-      - name: Deploy Web Container
+      - name: Deploy Web Container (set runtime URLs)
         uses: azure/cli@v2
         with:
           inlineScript: |
+            API_FQDN=$(az containerapp show \
+              --name "${{ env.API_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
+              --query properties.configuration.ingress.fqdn \
+              --output tsv)
+            STACK_FQDN=$(az containerapp show \
+              --name "${{ env.STACK_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
+              --query properties.configuration.ingress.fqdn \
+              --output tsv)
+            API_BASE_URL="https://${API_FQDN}"
+            STACK_BACKEND_URL="https://${STACK_FQDN}"
+            echo "Resolved API_BASE_URL=$API_BASE_URL"
+            echo "Resolved STACK_BACKEND_URL=$STACK_BACKEND_URL"
             az containerapp update \
-              --name ${{ env.WEB_CONTAINER_APP_NAME }} \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
-              --image ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.WEB_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+              --name "${{ env.WEB_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
+              --image "${{ secrets.ACR_LOGIN_SERVER }}/${{ env.WEB_IMAGE_NAME }}:${{ env.IMAGE_TAG }}" \
+              --set-env-vars API_BASE_URL=$API_BASE_URL STACK_BACKEND_URL=$STACK_BACKEND_URL
 
       - name: Get and Print Web App URL
         shell: bash
