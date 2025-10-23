@@ -2,7 +2,7 @@
 // Handles authenticated user session tracking and question interaction logging
 
 // Global variables for session tracking
-const apiBase = (window.runtimeConfig && window.runtimeConfig.API_BASE_URL) ? window.runtimeConfig.API_BASE_URL : window.location.origin;
+const apiBaseDb = (window.runtimeConfig && window.runtimeConfig.API_BASE_URL) ? window.runtimeConfig.API_BASE_URL : window.location.origin;
 let currentSession = null;
 let currentAttempts = {}; // Track attempts by question prefix
 
@@ -42,7 +42,7 @@ async function initializeDatabaseSession() {
         }
         
         // Use authenticated API endpoint instead of direct Supabase client
-        const response = await fetch(`${apiBase}/session/start`, {
+        const response = await fetch(`${apiBaseDb}/session/start`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ async function createQuestionAttempt(qfile, qname, qprefix, seed) {
     
     try {
         // Use authenticated API endpoint
-        const response = await fetch(`${apiBase}/attempt`, {
+        const response = await fetch(`${apiBaseDb}/attempt`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ async function updateQuestionAttempt(qprefix, score, maxScore, isCorrect) {
         });
 
         // Use authenticated API endpoint for updates
-        const response = await fetch(`${apiBase}/attempt/${attemptId}`, {
+        const response = await fetch(`${apiBaseDb}/attempt/${attemptId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -201,7 +201,7 @@ async function trackInput(qprefix, inputName, inputValue, inputType, isFinalAnsw
         });
         
         // Use authenticated API endpoint for input tracking
-        const response = await fetch(`${apiBase}/input`, {
+        const response = await fetch(`${apiBaseDb}/input`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
