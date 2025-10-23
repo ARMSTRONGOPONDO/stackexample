@@ -39,11 +39,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: ACR CLI Login
-        uses: azure/cli@v2
-        with:
-          inlineScript: |
-            az acr login --name ${{ env.ACR_NAME }}
+      - name: ACR Login (token-based)
+        shell: bash
+        run: |
+          ACR_SERVER="${{ secrets.ACR_LOGIN_SERVER }}"
+          TOKEN=$(az acr login --name "${{ env.ACR_NAME }}" --expose-token --output tsv --query accessToken)
+          echo "$TOKEN" | docker login "$ACR_SERVER" -u 00000000-0000-0000-0000-000000000000 --password-stdin
 
       - name: Build and Push Web Image
         uses: docker/build-push-action@v6
