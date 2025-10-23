@@ -77,6 +77,18 @@ function send(qfile, qname, qprefix) {
   http.setRequestHeader('Content-Type', 'application/json');
   http.onreadystatechange = function() {
     if(http.readyState == 4) {
+      if (http.status >= 400) {
+        try {
+          console.error('[STACK /render error]', {
+            status: http.status,
+            statusText: http.statusText,
+            headers: http.getAllResponseHeaders(),
+            body: http.responseText
+          });
+        } catch (err) {
+          console.error('[STACK /render error] status=' + http.status + ' body=' + http.responseText);
+        }
+      }
       try {
         const json = JSON.parse(http.responseText);
         if (json.message) {
