@@ -15,12 +15,14 @@ env:
   LOCATION: uaenorth
   ENVIRONMENT_NAME: stack-api-env
   ACR_NAME: stackapiregistry1032
+  MAXIMA_IMAGE: mathinstitut/goemaxima:2025102100-latest
   WEB_IMAGE_NAME: stack-web
   API_IMAGE_NAME: stack-api
   STACK_IMAGE_NAME: stack-backend
   WEB_CONTAINER_APP_NAME: stack-web
   API_CONTAINER_APP_NAME: stack-api
   STACK_CONTAINER_APP_NAME: stack-backend
+  MAXIMA_CONTAINER_APP_NAME: stack-maxima
   IMAGE_TAG: ${{ github.run_number }}
 
 jobs:
@@ -109,6 +111,48 @@ jobs:
               --name ${{ env.STACK_CONTAINER_APP_NAME }} \
               --resource-group ${{ env.RESOURCE_GROUP }} \
               --image ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.STACK_IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Ensure Maxima CAS Container
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            # Create or update the Maxima CAS container app
+            if ! az containerapp show -n "${{ env.MAXIMA_CONTAINER_APP_NAME }}" -g "${{ env.RESOURCE_GROUP }}" > /dev/null 2>&1; then
+              echo "Creating Maxima container app..."
+              az containerapp create \
+                --name "${{ env.MAXIMA_CONTAINER_APP_NAME }}" \
+                --resource-group "${{ env.RESOURCE_GROUP }}" \
+                --environment "${{ env.ENVIRONMENT_NAME }}" \
+                --image "${{ env.MAXIMA_IMAGE }}" \
+                --target-port 8080 \
+                --ingress external \
+                --min-replicas 1 \
+                --max-replicas 1 \
+                --env-vars GOEMAXIMA_QUEUE_LEN=32
+            else
+              echo "Updating Maxima container app..."
+              az containerapp update \
+                --name "${{ env.MAXIMA_CONTAINER_APP_NAME }}" \
+                --resource-group "${{ env.RESOURCE_GROUP }}" \
+                --image "${{ env.MAXIMA_IMAGE }}" \
+                --set-env-vars GOEMAXIMA_QUEUE_LEN=32
+            fi
+
+      - name: Wire MAXIMA_URL into STACK Backend
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            MAXIMA_FQDN=$(az containerapp show \
+              --name "${{ env.MAXIMA_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
+              --query properties.configuration.ingress.fqdn \
+              --output tsv)
+            MAXIMA_URL="https://${MAXIMA_FQDN}/maxima"
+            echo "Resolved MAXIMA_URL=${MAXIMA_URL}"
+            az containerapp update \
+              --name "${{ env.STACK_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.RESOURCE_GROUP }}" \
+              --set-env-vars MAXIMA_URL=$MAXIMA_URL
 
       - name: Deploy Web Container (set runtime URLs)
         uses: azure/cli@v2
