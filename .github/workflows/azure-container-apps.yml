@@ -15,7 +15,7 @@ env:
   LOCATION: uaenorth
   ENVIRONMENT_NAME: stack-api-env
   ACR_NAME: stackapiregistry1032
-  MAXIMA_IMAGE: mathinstitut/goemaxima:2025102100-latest
+  MAXIMA_IMAGE: mathinstitut/goemaxima:2024072400-latest
   WEB_IMAGE_NAME: stack-web
   API_IMAGE_NAME: stack-api
   STACK_IMAGE_NAME: stack-backend
