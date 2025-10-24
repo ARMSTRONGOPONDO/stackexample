@@ -75,6 +75,21 @@ function send(qfile, qname, qprefix) {
   const url = apiUrl + '/render';
   http.open("POST", url, true);
   http.setRequestHeader('Content-Type', 'application/json');
+  // Mobile reliability: add timeout and error handlers
+  http.timeout = 15000; // 15s
+  http.onerror = function() {
+    console.error('[STACK /render network error]', { url });
+    const el = document.getElementById(`${qprefix+"errors"}`);
+    if (el) el.innerText = 'Network error contacting STACK backend. Please check your connection and try again.';
+  };
+  http.ontimeout = function() {
+    console.error('[STACK /render timeout]', { url, timeout: http.timeout });
+    const el = document.getElementById(`${qprefix+"errors"}`);
+    if (el) el.innerText = 'The request to load the question timed out. Please try again.';
+  };
+  http.onabort = function() {
+    console.warn('[STACK /render aborted]', { url });
+  };
   http.onreadystatechange = function() {
     if(http.readyState == 4) {
       if (http.status >= 400) {
@@ -223,6 +238,21 @@ function validate(element, qfile, qname, qprefix) {
   // const url = window.location.origin + '/validate';
   const url = apiUrl + '/validate';
   http.open("POST", url, true);
+  // Mobile reliability: add timeout and error handlers
+  http.timeout = 15000; // 15s
+  http.onerror = function() {
+    console.error('[STACK /validate network error]', { url });
+    const el = document.getElementById(`${qprefix+"errors"}`);
+    if (el) el.innerText = 'Network error during validation. Please try again.';
+  };
+  http.ontimeout = function() {
+    console.error('[STACK /validate timeout]', { url, timeout: http.timeout });
+    const el = document.getElementById(`${qprefix+"errors"}`);
+    if (el) el.innerText = 'Validation timed out. Please try again.';
+  };
+  http.onabort = function() {
+    console.warn('[STACK /validate aborted]', { url });
+  };
   // Remove API prefix and subanswer id.
   const answerNamePrefixTrim = (qprefix+inputPrefix).length;
   const answerName = element.name.slice(answerNamePrefixTrim).split('_', 1)[0];
